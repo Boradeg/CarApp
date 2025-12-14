@@ -3,8 +3,8 @@ package com.example.tummoccarapptask.data.repository
 
 import com.example.tummoccarapptask.data.local.CarDao
 import com.example.tummoccarapptask.data.local.CarTable
-import com.example.tummoccarapptask.presentation.Screens.VehicleItem
 import com.example.tummoccarapptask.presentation.model.Resource
+import com.example.tummoccarapptask.presentation.model.VehicleItem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -50,3 +50,14 @@ sealed class CarUiState {
     data class Success(val cars: List<VehicleItem>) : CarUiState()
     data class Error(val message: String) : CarUiState()
 }
+enum class FilterType {
+    BRAND,
+    FUEL
+}
+
+data class FilterItem(
+    val id: String,
+    val title: String,
+    val isSelected: Boolean = false
+)
+

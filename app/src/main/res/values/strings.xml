@@ -13,4 +13,19 @@
     <string name="vehicle_details">Vehicle Details</string>
     <string name="close">Close</string>
     <string name="no_cars_found">No cars found</string>
+    <string name="brand">Brand</string>
+    <string name="model">Model</string>
+    <string name="owner_name">Owner Name</string>
+    <string name="select_vehicle_brand">Select Vehicle Brand</string>
+    <string name="select_vehicle_model">Select Vehicle Model</string>
+    <string name="select_fuel_type">Select Fuel Type</string>
+    <string name="vehicle_added_successfully">Vehicle added successfully</string>
+    <string name="vehical_details">VEHICAL DETAILS</string>
+    <string name="other_details">OTHER DETAILS</string>
+    <string name="enter_owner_s_full_name">Enter owner\'s full name</string>
+    <string name="select_year_of_purchase">Select year of purchase</string>
+    <string name="enter_vehicle_number_e_g_mh_12_ab_1234">Enter vehicle number (e.g., MH 12 AB 1234)</string>
+    <string name="txt_select_fuel_type">Select fuel type</string>
+    <string name="select_a_model">Select a model</string>
+    <string name="select_a_brand">Select a brand</string>
 </resources>

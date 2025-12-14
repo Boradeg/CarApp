@@ -1,8 +1,8 @@
 package com.example.tummoccarapptask.data.repository
 
 import com.example.tummoccarapptask.data.local.CarTable
-import com.example.tummoccarapptask.presentation.Screens.VehicleItem
 import com.example.tummoccarapptask.presentation.model.Resource
+import com.example.tummoccarapptask.presentation.model.VehicleItem
 import kotlinx.coroutines.flow.Flow
 
 interface CarRepository {
