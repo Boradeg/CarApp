@@ -1,10 +1,14 @@
 package com.example.tummoccarapptask.presentation.Screens
 
-import android.util.Log
+
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,10 +30,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -43,150 +51,343 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Color.Companion.LightGray
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontWeight.Companion.Bold
+import androidx.compose.ui.text.font.FontWeight.Companion.W400
 import androidx.compose.ui.text.font.FontWeight.Companion.W500
-import androidx.compose.ui.text.font.FontWeight.Companion.W700
 import androidx.compose.ui.text.font.FontWeight.Companion.W900
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import androidx.room.util.copy
 import com.example.tummoccarapptask.R
-import com.example.tummoccarapptask.data.repository.FilterItem
-import com.example.tummoccarapptask.data.repository.FilterType
+import com.example.tummoccarapptask.presentation.model.FilterItem
 import com.example.tummoccarapptask.presentation.model.FilterState
+import com.example.tummoccarapptask.presentation.model.FilterType
 import com.example.tummoccarapptask.presentation.model.Resource
 import com.example.tummoccarapptask.presentation.model.UserData
 import com.example.tummoccarapptask.presentation.model.VehicleItem
-import com.example.tummoccarapptask.presentation.navigation.Screen
+import com.example.tummoccarapptask.presentation.navigation.Screens
+import com.example.tummoccarapptask.presentation.theme.BgColorSubtitle
 import com.example.tummoccarapptask.presentation.theme.BlueTopBar
 import com.example.tummoccarapptask.presentation.theme.Blue_10
 import com.example.tummoccarapptask.presentation.theme.Blue_dark
 import com.example.tummoccarapptask.presentation.theme.Blue_light
 import com.example.tummoccarapptask.presentation.theme.Card1
 import com.example.tummoccarapptask.presentation.theme.Card2
+import com.example.tummoccarapptask.presentation.theme.HeadingColorTitle
 import com.example.tummoccarapptask.presentation.theme.RowBgColor
+import com.example.tummoccarapptask.presentation.theme.UnselectedRadioButtonColor
+import com.example.tummoccarapptask.presentation.utils.calculateYearDifference
 import com.example.tummoccarapptask.presentation.viewmodel.CarViewModel
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showSystemUi = true)
-@Composable
-fun HomeScreen(
-    navController: NavHostController = rememberNavController(),
-) {
-    val viewModel: CarViewModel = hiltViewModel()
-    val uiState by viewModel.uiState.collectAsState()
 
+@Composable
+fun HomeRoute(
+    navController: NavHostController = rememberNavController(),
+    viewModel: CarViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
     val filterState by viewModel.filterState.collectAsState()
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var showFilterSheet by remember { mutableStateOf(false) }
 
     val systemUiController = rememberSystemUiController()
-    val userdata = viewModel.userData
-
     SideEffect {
         systemUiController.setStatusBarColor(
             color = BlueTopBar,
             darkIcons = false
         )
     }
+
+    HomeScreen(
+        uiState = uiState,
+        filterState = filterState,
+        userData = viewModel.userData,
+        onAddVehicle = {
+            navController.navigate(Screens.AddCar.route)
+        },
+        onFilterApply = viewModel::applyFilter,
+        onFilterClear = viewModel::clearFilter,
+        onFilterTypeChange = viewModel::updateFilterType,
+        onFilterItemClick = viewModel::toggleFilterItem
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeScreen(
+    uiState: Resource<List<VehicleItem>>,
+    filterState: FilterState,
+    userData: UserData,
+    onAddVehicle: () -> Unit,
+    onFilterApply: () -> Unit,
+    onFilterClear: () -> Unit,
+    onFilterTypeChange: (FilterType) -> Unit,
+    onFilterItemClick: (FilterType, String) -> Unit
+) {
+    var showFilterSheet by rememberSaveable { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    navController.navigate(Screen.AddCar.route)
-                },
-                modifier = Modifier.padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(12.dp),
-                containerColor = Blue_10,
-                contentColor = White,
-            ) {
-                Row(
-                    modifier = Modifier.padding(
-                        horizontal = 16.dp,
-                        vertical = 8.dp
-                    ),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = stringResource(R.string.add_vehicle),
-                        tint = White
-                    )
-                    Spacer(modifier = Modifier.width(8.dp)) // Increased spacer
-                    Text(
-                        text = stringResource(R.string.add_vehicle),
-                        style = MaterialTheme.typography.labelLarge // labelLarge is better for buttons
-                    )
-                }
-            }
+            AddVehicleFab(onClick = onAddVehicle)
         }
-    ) { innerPadding ->
+    ) { padding ->
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = innerPadding.calculateBottomPadding())
+                .padding(padding)
         ) {
-            TopHeader(innerPadding, userdata)
-            when (uiState) {
-                is Resource.Loading -> {
-                    CommonLoader()
-                }
-                is Resource.Success -> {
-                    val cars = (uiState as Resource.Success).data
-                    VehicleInventoryList(cars, onClickFilter = {
-                        showFilterSheet = true
-                    })
-                }
 
-                is Resource.Error -> Text("Error: ${(uiState as Resource.Error).message}")
+            TopHeader(userData)
+
+            when (uiState) {
+                is Resource.Loading -> CommonLoader()
+
+                is Resource.Error -> EmptyState(uiState.message)
+
+                is Resource.Success -> {
+                    VehicleInventoryList(
+                        vehicleList = uiState.data,
+                        onClickFilter = {
+                            showFilterSheet = true
+                        }
+                    )
+                }
             }
         }
+
         if (showFilterSheet) {
             ModalBottomSheet(
                 onDismissRequest = { showFilterSheet = false },
-                sheetState = sheetState
+                sheetState = sheetState,
+                dragHandle = null,
+                containerColor = White
             ) {
                 FilterBottomSheet(
                     state = filterState,
-
-                    onTypeChange = { type ->
-                        viewModel.updateFilterType(type)
-                    },
-
-                    onItemClick = { type, id ->
-                        viewModel.toggleFilterItem(type, id)
-                    },
-
-                    onApply = {
-                        viewModel.applyFilter()
-                        showFilterSheet = false
-                    },
-
+                    onTypeChange = onFilterTypeChange,
+                    onItemClick = onFilterItemClick,
                     onClearAll = {
-                        viewModel.clearFilter()
+                        onFilterClear()
                         showFilterSheet = false
+                    },
+                    onApply = {
+                        onFilterApply()
+                        showFilterSheet = false
+                    },
+                    onDismiss = {
+
+                        showFilterSheet = false
+
                     }
                 )
             }
         }
     }
 }
+
+@Composable
+fun AddVehicleFab(onClick: () -> Unit) {
+    FloatingActionButton(
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        containerColor = Blue_10,
+        contentColor = White
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Default.Add, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = stringResource(R.string.add_vehicle),
+                style = MaterialTheme.typography.labelLarge
+            )
+        }
+    }
+}
+
+@Composable
+fun VehicleInventoryList(
+    vehicleList: List<VehicleItem>,
+    onClickFilter: () -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF9FAFB)),
+        contentPadding = PaddingValues(12.dp)
+    ) {
+
+        item {
+            Text(
+                text = stringResource(R.string.vehicle_inventory_list),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = Bold
+            )
+        }
+
+        item { Spacer(Modifier.height(16.dp)) }
+
+        item { FilterButton(onClickFilter) }
+
+        item { Spacer(Modifier.height(16.dp)) }
+
+        if (vehicleList.isNotEmpty()) {
+
+            item { VehicleTableHeader() }
+
+            items(
+                items = vehicleList,
+                key = { it.id }
+            ) { vehicle ->
+                VehicleTableRow(vehicle)
+            }
+
+        } else {
+            item {
+                EmptyState()
+            }
+        }
+    }
+}
+
+@Composable
+fun EmptyState(msg: String? = null) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        val errorMessage = msg ?: stringResource(R.string.no_cars_found)
+        Text(
+            text = errorMessage,
+            style = MaterialTheme.typography.bodyLarge
+        )
+    }
+}
+
+object VehicleTableConfig {
+    const val MODEL = 1.2f
+    const val NUMBER = 2f
+    const val FUEL = 1.2f
+    const val YEAR = 1.8f
+}
+
+@Composable
+fun VehicleTableHeader() {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
+            .background(RowBgColor)
+            .border(0.5.dp, LightGray, RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
+            .height(IntrinsicSize.Min)
+    ) {
+        TableCell(stringResource(R.string.model_brand), VehicleTableConfig.MODEL)
+        TableCell(stringResource(R.string.vehicle_number), VehicleTableConfig.NUMBER)
+        TableCell(
+            stringResource(id = R.string.fuel_type),
+            VehicleTableConfig.FUEL,
+
+            )
+        TableCell(
+            stringResource(R.string.year_of_purchase),
+            VehicleTableConfig.YEAR,
+            showDivider = false
+        )
+    }
+}
+
+@Composable
+fun VehicleTableRow(item: VehicleItem) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .background(White)
+            .border(0.5.dp, LightGray)
+            .height(IntrinsicSize.Min)
+    ) {
+        TableCell(item.model, VehicleTableConfig.MODEL, showSubtite = item.brand)
+        TableCell(
+            item.number,
+            VehicleTableConfig.NUMBER,
+            textStyle = MaterialTheme.typography.labelMedium.copy(
+                fontWeight = Bold,
+                color = Color(0xFF1570EF)
+            )
+        )
+        TableCell(item.fuelType, VehicleTableConfig.FUEL)
+        TableCell(item.year, VehicleTableConfig.YEAR, showDivider = false, year = item.year.toInt())
+    }
+}
+
+@Composable
+fun FilterItemsColumn(
+    items: List<FilterItem>,
+    onItemClick: (String) -> Unit
+) {
+    LazyColumn {
+        items(
+            items = items,
+            key = { it.id }
+        ) { item ->
+            FilterItemRow(item, onItemClick)
+            HorizontalDivider(thickness = 1.dp)
+        }
+    }
+}
+
+@Composable
+fun FilterItemRow(
+    item: FilterItem,
+    onItemClick: (String) -> Unit
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .background(BgColorSubtitle)
+            .clickable { onItemClick(item.id) }
+            .padding(vertical = 3.dp, horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            item.title,
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.labelMedium.copy(
+                fontWeight = W500,
+                fontSize = 12.sp
+            ),
+            color = BlueTopBar
+        )
+        Checkbox(
+            checked = item.isSelected,
+            onCheckedChange = { onItemClick(item.id) },
+            modifier = Modifier.clip(RoundedCornerShape(12.dp)),
+            colors = CheckboxDefaults.colors(
+                checkedColor = Blue_10,
+                uncheckedColor = Color.Gray,
+                checkmarkColor = White,
+                disabledCheckedColor = LightGray
+            )
+        )
+    }
+}
+
 
 @Composable
 fun FilterButton(onClick: () -> Unit) {
@@ -214,13 +415,16 @@ fun FilterButton(onClick: () -> Unit) {
 }
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun RowScope.TableCell(
     text: String,
     weight: Float,
     showDivider: Boolean = true,
     color: Color = BlueTopBar,
-    textStyle: TextStyle? = null
+    textStyle: TextStyle? = null,
+    showSubtite: String? = null,
+    year: Int? = null
 ) {
     Box(
         modifier = Modifier
@@ -228,15 +432,40 @@ fun RowScope.TableCell(
             .padding(horizontal = 8.dp, vertical = 12.dp),
         contentAlignment = Alignment.CenterStart
     ) {
-        Text(
-            text = text,
-            style = textStyle ?: MaterialTheme.typography.labelMedium.copy(
-                fontSize = 12.sp,
-                fontWeight = W500,
-                color = color
+        Column {
+            Text(
+                text = text,
+                style = textStyle ?: MaterialTheme.typography.labelMedium.copy(
+                    fontSize = 12.sp,
+                    fontWeight = W500,
+                    color = color
+                )
             )
-        )
+            if (year != null) {
+                Spacer(modifier = Modifier.padding(top = 10.dp))
+                Text(
+                    text = calculateYearDifference(year),
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontSize = 10.sp,
+                        fontWeight = W400,
+                        color = Blue_light
+                    )
+                )
+            }
+            if (showSubtite != null) {
+                Spacer(modifier = Modifier.padding(top = 10.dp))
+                Text(
+                    text = showSubtite,
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontSize = 10.sp,
+                        fontWeight = W400,
+                        color = Blue_light
+                    )
+                )
+            }
+        }
     }
+
 
     if (showDivider) {
         Box(
@@ -249,124 +478,16 @@ fun RowScope.TableCell(
 }
 
 
-
 @Composable
-fun VehicleTableRow(item: VehicleItem) {
-    val column1Weight = 1.2f
-    val column2Weight = 2.0f
-    val column3Weight = 1.2f
-    val column4Weight = 1.8f
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(White)
-            .border(0.5.dp, LightGray)
-            .height(IntrinsicSize.Min)
-    ) {
-        TableCell(item.model, column1Weight)
-        TableCell(item.number, column2Weight,
-            textStyle = MaterialTheme.typography.labelMedium.copy(
-                fontWeight = W700,
-                color  = Color(0xFF1570EF)
-            ))
-        TableCell(item.fuelType, column3Weight)
-        TableCell(item.year, column4Weight, showDivider = false)
-    }
-}
-
-
-@Composable
-fun VehicleInventoryList(vehicleList: List<VehicleItem>, onClickFilter: () -> Unit) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF9FAFB)),
-        contentPadding = PaddingValues(12.dp)
-    ) {
-        item {
-            Text(
-                text = stringResource(R.string.vehicle_inventory_list),
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-            )
-        }
-        item {
-            Spacer(modifier = Modifier.height(24.dp))
-        }
-        item {
-            FilterButton { onClickFilter() }
-        }
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        if (vehicleList.size > 0) {
-            item {
-                VehicleTableHeader()
-            }
-
-            items(items = vehicleList) { vehicle ->
-                Log.d("TAG", "VehicleInventoryListScreen: $vehicle")
-                VehicleTableRow(item = vehicle)
-            }
-
-        } else {
-            item {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = stringResource(R.string.no_cars_found),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun VehicleTableHeader() {
-    val column1Weight = 1.2f
-    val column2Weight = 2.0f
-    val column3Weight = 1.2f
-    val column4Weight = 1.8f
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
-            .background(RowBgColor)
-            .border(0.5.dp, LightGray, RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
-            .height(IntrinsicSize.Min)
-    ) {
-        TableCell(text = stringResource(id = R.string.model_brand), weight = column1Weight,
-            textStyle = MaterialTheme.typography.labelMedium.copy(
-                fontWeight = W500,
-                color = BlueTopBar
-            ))
-        TableCell(text = stringResource(R.string.vehicle_number), weight = column2Weight)
-        TableCell(text = stringResource(R.string.fuel_type), weight = column3Weight)
-        TableCell(
-            text = stringResource(R.string.year_of_purchase),
-            weight = column4Weight,
-            showDivider = false
-        )
-
-    }
-}
-
-@Composable
-fun TopHeader(innerPadding: PaddingValues, userData: UserData) {
+fun TopHeader(userData: UserData) {
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight()
             .background(BlueTopBar)
-            .padding(top = innerPadding.calculateTopPadding())
+        //
+        // .padding(top = innerPadding.calculateTopPadding())
 
     ) {
 
@@ -479,7 +600,8 @@ fun FilterBottomSheet(
     onTypeChange: (FilterType) -> Unit,
     onItemClick: (FilterType, String) -> Unit,
     onClearAll: () -> Unit,
-    onApply: () -> Unit
+    onApply: () -> Unit,
+    onDismiss: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -487,14 +609,31 @@ fun FilterBottomSheet(
             .padding(16.dp)
     ) {
 
-        Text(
-            text = "Filter",
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = stringResource(R.string.filter),
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = Bold,
+                    fontSize = 16.sp
+                ),
+                color = HeadingColorTitle
+            )
 
-        Spacer(Modifier.height(16.dp))
+            Icon(
+                imageVector = (Icons.Default.Close),
+                contentDescription = stringResource(R.string.close),
+                modifier = Modifier
+                    .size(22.dp)
+                    .clickable { onDismiss() }
+            )
+        }
 
+        Spacer(modifier = Modifier.padding(bottom = 10.dp))
         Row {
             FilterTypeColumn(
                 selectedType = state.selectedType,
@@ -513,56 +652,62 @@ fun FilterBottomSheet(
         }
 
         Spacer(Modifier.height(24.dp))
+        ClearApplyButtons(
+            onClearAllClick = { onClearAll() },
+            onApplyClick = { onApply() }
+        )
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            OutlinedButton(
-                onClick = onClearAll,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Clear all")
-            }
-
-            Spacer(Modifier.width(12.dp))
-
-            Button(
-                onClick = onApply,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Apply")
-            }
-        }
     }
 }
 
 @Composable
-fun FilterItemsColumn(
-    items: List<FilterItem>,
-    onItemClick: (String) -> Unit
+fun ClearApplyButtons(
+    onClearAllClick: () -> Unit,
+    onApplyClick: () -> Unit
 ) {
-    Column {
-        items.forEach { item ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onItemClick(item.id) }
-                    .padding(vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = item.title,
-                    modifier = Modifier.weight(1f)
-                )
-                Checkbox(
-                    checked = item.isSelected,
-                    onCheckedChange = { onItemClick(item.id) }
-                )
-            }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        OutlinedButton(
+            onClick = onClearAllClick,
+            modifier = Modifier
+                .weight(1f)
+                .height(40.dp),
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, UnselectedRadioButtonColor)
+        ) {
+            Text(
+                text = stringResource(R.string.clear_all),
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = W500,
+                    fontSize = 16.sp
+                ),
+                color = Blue_light
+            )
+        }
+
+        Button(
+            onClick = onApplyClick,
+            modifier = Modifier
+                .weight(1f)
+                .height(40.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A7CF5)) // Blue background
+        ) {
+            Text(
+                text = stringResource(R.string.apply),
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = W500,
+                    fontSize = 16.sp
+                ),
+                color = White
+            )
         }
     }
 }
+
 
 @Composable
 fun FilterTypeColumn(
@@ -570,17 +715,29 @@ fun FilterTypeColumn(
     onTypeChange: (FilterType) -> Unit
 ) {
     Column(
-        modifier = Modifier.width(100.dp)
+        modifier = Modifier
+            .width(100.dp)
+            .padding(top = 8.dp)
     ) {
-        FilterType.values().forEach {
+        FilterType.entries.forEach { it ->
             Text(
-                text = it.name.replaceFirstChar { c -> c.uppercase() },
-                color = if (it == selectedType) Color(0xFF1381FF) else Color.Gray,
-                fontWeight = FontWeight.Bold,
+                text = it.name.lowercase().replaceFirstChar { it.uppercaseChar() },
+                color = if (it == selectedType) Blue_10 else Blue_dark,
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontWeight = W500,
+                    fontSize = 14.sp
+                ),
                 modifier = Modifier
                     .padding(vertical = 12.dp)
-                    .clickable { onTypeChange(it) }
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        onTypeChange(it)
+                    }
+
             )
+            HorizontalDivider(thickness = 1.dp)
         }
     }
 }

@@ -85,35 +85,29 @@ fun AddCarScreen(
     viewModel: CarViewModel = hiltViewModel()
 ) {
     val formState by viewModel.formState.collectAsState()
-
+    var isLoading by remember { mutableStateOf(false) }
     var showBrandSheet by remember { mutableStateOf(false) }
     var openFuelSheet by remember { mutableStateOf(false) }
     var openModelSheet by remember { mutableStateOf(false) }
-    val submitState by viewModel.submitState.collectAsState()
+
     val context = LocalContext.current
 
-    LaunchedEffect(submitState) {
-        when (submitState) {
-            is SubmitState.Error -> {
-                Toast.makeText(
-                    context,
-                    (submitState as SubmitState.Error).message,
-                    Toast.LENGTH_SHORT
-                ).show()
-                viewModel.resetSubmitState()
-            }
+    // Listen for SharedFlow events
+    LaunchedEffect(Unit) {
+        viewModel.submitState.collect { state ->
+            isLoading = state is SubmitState.Loading
 
-            is SubmitState.Success -> {
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.vehicle_added_successfully), Toast.LENGTH_SHORT
-                ).show()
-                navController.popBackStack()
-                viewModel.resetSubmitState()
-            }
+            when (state) {
+                is SubmitState.Success -> {
+                    Toast.makeText(context, "Vehicle Added!", Toast.LENGTH_SHORT).show()
+                    navController.popBackStack()
+                }
 
-            else -> {
-                Unit
+                is SubmitState.Error -> {
+                    Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                }
+
+                else -> {}
             }
         }
     }
@@ -144,17 +138,17 @@ fun AddCarScreen(
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
+                    containerColor = White
                 ),
-                modifier = Modifier.padding(start =  16.dp)
+                modifier = Modifier.padding(start = 16.dp)
             )
         },
         containerColor = White
     ) { padding ->
-        if (submitState is SubmitState.Loading) {
+
+        if (isLoading) {
             CommonLoader()
         }
-
         Column(
             modifier = Modifier
                 .padding(padding)
@@ -241,7 +235,7 @@ fun AddCarScreen(
             Spacer(Modifier.height(24.dp))
             PrimaryButton(
                 stringResource(R.string.add_vehicle),
-                enabled = submitState !is SubmitState.Loading
+                enabled = !isLoading
             ) {
                 viewModel.addCar()
             }
@@ -304,9 +298,9 @@ fun PrimaryButton(
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = Color(0xFF1381FF),
-            contentColor = Color.White,
+            contentColor = White,
             disabledContainerColor = Color(0xFF1381FF).copy(alpha = 0.5f),
-            disabledContentColor = Color.White
+            disabledContentColor = White
         ),
         elevation = ButtonDefaults.buttonElevation(
             defaultElevation = 2.dp,
@@ -317,7 +311,7 @@ fun PrimaryButton(
         Text(
             text = text,
             fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
+            fontWeight = Bold,
             fontFamily = FontFamily(Font(R.font.satoshi_variable))
         )
     }
@@ -362,13 +356,15 @@ fun CommonInputField(
             onValueChange = onValueChange,
             readOnly = readOnly,
             enabled = onClick == null,
+
             label = {
                 Text(
                     text = label,
                     color = LablePlaceholder,
-                    fontWeight = W500,
-                    fontSize = 14.sp,
-                    fontFamily = FontFamily(Font(R.font.satoshi_variable)),
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = W500,
+                        fontSize = 14.sp
+                    )
                 )
             },
 
@@ -382,6 +378,7 @@ fun CommonInputField(
                 }
             },
             placeholder = {
+                //hint
                 if (value.isEmpty()) {
                     Text(
                         text = hint,
@@ -392,31 +389,19 @@ fun CommonInputField(
                 }
             },
             textStyle = MaterialTheme.typography.titleMedium.copy(
-                color = LablePlaceholder,
+                color = BlueTopBar,
                 fontWeight = W700,
                 fontSize = 16.sp,
             ),
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.White),
+                .background(White),
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = borderColor,
                 unfocusedBorderColor = borderColor,
                 disabledBorderColor = borderColor,
                 errorBorderColor = borderColor,
-
-                focusedTextColor = BlueTopBar,
-                unfocusedTextColor = Color.Black,
-                disabledTextColor = Color.Black,
-
-                focusedLabelColor = GrayHeading,
-                unfocusedLabelColor = GrayHeading,
-                disabledLabelColor = GrayHeading,
-                focusedPlaceholderColor = GrayHeading,
-                unfocusedPlaceholderColor = GrayHeading,
-                disabledPlaceholderColor = GrayHeading,
-
                 cursorColor = Color.Black
             )
 

@@ -28,4 +28,6 @@
     <string name="txt_select_fuel_type">Select fuel type</string>
     <string name="select_a_model">Select a model</string>
     <string name="select_a_brand">Select a brand</string>
+    <string name="clear_all">Clear all</string>
+    <string name="apply">Apply</string>
 </resources>

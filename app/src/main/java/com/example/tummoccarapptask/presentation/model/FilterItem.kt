@@ -1,10 +1,7 @@
 package com.example.tummoccarapptask.presentation.model
 
-data class SelectionItem(
+data class FilterItem(
+    val id: String,
     val title: String,
-    val icon: Int? = null
+    val isSelected: Boolean = false
 )
-
-
-
-

@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.tummoccarapptask"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -33,6 +33,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+
     }
     kotlinOptions {
         jvmTarget = "11"
@@ -61,16 +62,14 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     // --- Room ---
-    // FIX 1: Use the consistent room runtime library and add KTX + Compiler
     implementation(libs.androidx.room.runtime.android)
-    implementation(libs.androidx.room.ktx)          // For coroutine and Flow support
-    kapt(libs.androidx.room.compiler)               // CRITICAL: This generates the Impl class
+    implementation(libs.androidx.room.ktx)
+    kapt(libs.androidx.room.compiler)
 
-    // --- Hilt ---
-    // FIX 2: Removed duplicated Hilt dependencies
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation("com.android.tools:desugar_jdk_libs:2.0.4")
 
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
 

@@ -17,19 +17,18 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    // FIX 2: Corrected the return type and the class reference in Room.databaseBuilder
     fun provideCarDatabase(@ApplicationContext context: Context): CarDatabase {
         return Room.databaseBuilder(
             context,
-            CarDatabase::class.java, // Changed from Cat::class.java
+            CarDatabase::class.java,
             "car_database"
         ).build()
     }
 
     @Provides
     @Singleton
-    // FIX 3: Corrected the parameter type to match the provider above
     fun provideCarDao(database: CarDatabase): CarDao {
         return database.roomDao()
     }
+
 }
