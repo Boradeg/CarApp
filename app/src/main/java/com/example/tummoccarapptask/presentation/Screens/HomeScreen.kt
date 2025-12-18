@@ -1,8 +1,5 @@
 package com.example.tummoccarapptask.presentation.Screens
 
-
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -72,6 +69,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.tummoccarapptask.R
+import com.example.tummoccarapptask.presentation.component.CommonLoader
 import com.example.tummoccarapptask.presentation.model.FilterItem
 import com.example.tummoccarapptask.presentation.model.FilterState
 import com.example.tummoccarapptask.presentation.model.FilterType
@@ -415,7 +413,6 @@ fun FilterButton(onClick: () -> Unit) {
 }
 
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun RowScope.TableCell(
     text: String,

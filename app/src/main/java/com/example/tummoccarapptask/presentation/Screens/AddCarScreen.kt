@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -25,7 +24,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -46,6 +44,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,7 +55,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.text.font.FontWeight.Companion.W400
 import androidx.compose.ui.text.font.FontWeight.Companion.W500
@@ -67,6 +65,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.tummoccarapptask.R
+import com.example.tummoccarapptask.presentation.component.CommonLoader
 import com.example.tummoccarapptask.presentation.model.SelectionItem
 import com.example.tummoccarapptask.presentation.model.SubmitState
 import com.example.tummoccarapptask.presentation.theme.BlueTopBar
@@ -75,24 +74,24 @@ import com.example.tummoccarapptask.presentation.theme.GrayHeading
 import com.example.tummoccarapptask.presentation.theme.HeadingColorTitle
 import com.example.tummoccarapptask.presentation.theme.LablePlaceholder
 import com.example.tummoccarapptask.presentation.theme.UnselectedRadioButtonColor
-import com.example.tummoccarapptask.presentation.viewmodel.CarViewModel
+import com.example.tummoccarapptask.presentation.viewmodel.AddCarViewModel
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddCarScreen(
     navController: NavHostController = rememberNavController(),
-    viewModel: CarViewModel = hiltViewModel()
+    viewModel: AddCarViewModel = hiltViewModel()
 ) {
     val formState by viewModel.formState.collectAsState()
-    var isLoading by remember { mutableStateOf(false) }
-    var showBrandSheet by remember { mutableStateOf(false) }
-    var openFuelSheet by remember { mutableStateOf(false) }
-    var openModelSheet by remember { mutableStateOf(false) }
+    var isLoading by rememberSaveable { mutableStateOf(false) }
+    var showBrandSheet by rememberSaveable { mutableStateOf(false) }
+    var openFuelSheet by rememberSaveable { mutableStateOf(false) }
+    var openModelSheet by rememberSaveable { mutableStateOf(false) }
 
     val context = LocalContext.current
 
-    // Listen for SharedFlow events
+
     LaunchedEffect(Unit) {
         viewModel.submitState.collect { state ->
             isLoading = state is SubmitState.Loading
@@ -317,16 +316,6 @@ fun PrimaryButton(
     }
 }
 
-@Composable
-fun CommonLoader() {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        CircularProgressIndicator()
-    }
-}
 
 @Composable
 fun CommonInputField(

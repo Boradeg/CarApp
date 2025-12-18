@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.compose) apply false
 
-    // CORRECTED: Use the alias from libs.versions.toml for Hilt
+    // hilt
     alias(libs.plugins.hilt.android) apply false
     alias(libs.plugins.kotlin.kapt) apply false
 

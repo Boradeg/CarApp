@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    // Use aliases for Hilt and Kapt plugins for consistency
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.kotlin.kapt)
 }
@@ -41,6 +40,11 @@ android {
     buildFeatures {
         compose = true
     }
+
+    dependenciesInfo {
+        includeInApk = true
+    }
+    ndkVersion = "26.1.10909125"
 }
 
 dependencies {
@@ -69,8 +73,7 @@ dependencies {
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
-    implementation("com.android.tools:desugar_jdk_libs:2.0.4")
-
-    implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
+    implementation(libs.desugar.jdk.libs)
+    implementation(libs.accompanist.systemuicontroller)
 
 }
